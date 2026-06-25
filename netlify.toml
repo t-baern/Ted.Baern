@@ -1,0 +1,28 @@
+# Netlify configuration for the Ted Baern site.
+# The site is static — no build step. We just publish the uploads/ folder
+# (so the site serves at / , not /uploads/), and set optimal headers.
+
+[build]
+  publish = "uploads"
+  command = ""
+
+# HTML: always revalidate so visitors get the latest copy after a deploy.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Images carry stable filenames — cache them hard for a year.
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Sensible security headers (no cost, looks professional in audits).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "SAMEORIGIN"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"

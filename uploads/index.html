@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ted Baern — Web Design for Local Business</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+/* ── TOKENS ── */
+:root {
+  --black:  #0a0a0a;
+  --white:  #f0ede8;
+  --accent: #e8ff47;
+  --grey1:  #1a1a1a;
+  --grey2:  #2a2a2a;
+  --grey3:  #666;
+  --radius: 4px;
+  --ease:   cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  cursor: none;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── CUSTOM CURSOR ── */
+#cursor {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  width: 12px; height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  transition: width 0.25s var(--ease), height 0.25s var(--ease);
+  mix-blend-mode: difference;
+}
+#cursor.hovering { width: 48px; height: 48px; }
+
+/* ── GRAIN OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9998;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px;
+  opacity: 0.025;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+  background: rgba(10,10,10,0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--grey2);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px;
+  height: 64px;
+}
+#scroll-progress {
+  position: absolute; left: 0; bottom: -1px;
+  height: 2px; width: 0;
+  background: var(--accent);
+  box-shadow: 0 0 12px rgba(232,255,71,0.6);
+  z-index: 501;
+}
+.nav-logo {
+  font-size: 0.95rem; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer;
+}
+.nav-logo span { color: var(--accent); }
+.nav-links {
+  display: flex; align-items: center; gap: 4px;
+  list-style: none;
+}
+.nav-links li a {
+  display: block;
+  font-size: 0.78rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--grey3);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  transition: color 0.2s, background 0.2s;
+  position: relative;
+  cursor: pointer;
+}
+.nav-links li a:hover { color: var(--white); background: var(--grey1); }
+.nav-links li a.active {
+  color: var(--white);
+}
+.nav-links li a.active::after {
+  content: '';
+  position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+  width: 20px; height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+.nav-cta {
+  background: var(--accent) !important;
+  color: var(--black) !important;
+  font-weight: 700 !important;
+  padding: 8px 20px !important;
+  border-radius: var(--radius);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s !important;
+}
+.nav-cta:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(232,255,71,0.35) !important;
+  background: var(--accent) !important;
+}
+.nav-cta.active::after { display: none !important; }
+
+/* ── PAGE SYSTEM ── */
+#app { padding-top: 64px; }
+
+.page {
+  display: none;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+  min-height: calc(100vh - 64px);
+}
+.page.active {
+  display: block;
+}
+.page.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── SHARED SECTION UTILITIES ── */
+.section-label {
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 900; line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 64px;
+}
+.reveal {
+  opacity: 0; transform: translateY(32px);
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+.reveal.visible { opacity: 1; transform: none; }
+
+/* ──────────────────────────────────────────
+   HOME PAGE
+   ────────────────────────────────────────── */
+#hero {
+  min-height: calc(100vh - 64px);
+  display: flex; flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 48px 80px;
+  position: relative; overflow: hidden;
+}
+.hero-photo {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 54%; z-index: 0;
+  pointer-events: none;
+}
+.hero-photo img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: 50% 24%;
+  opacity: 0;
+  animation: heroPhotoIn 1.5s var(--ease) 0.35s forwards;
+}
+.hero-photo-veil {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(to right, var(--black) 0%, rgba(10,10,10,0.55) 20%, transparent 50%),
+    linear-gradient(to bottom, var(--black) 0%, transparent 20%),
+    linear-gradient(to top, var(--black) 0%, transparent 24%);
+}
+.hero-content {
+  position: relative; z-index: 2;
+  width: min(58%, 740px);
+}
+@keyframes heroPhotoIn {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.tw-caret {
+  display: inline-block;
+  width: 4px; height: 0.96em;
+  margin-left: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--accent), 0 0 4px var(--accent);
+  vertical-align: text-bottom;
+  animation: twBlink 0.5s steps(1) infinite;
+}
+@keyframes twBlink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+.tw-char {
+  animation: twFade 0.65s ease both;
+}
+@keyframes twFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.hero-eyebrow {
+  font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 24px;
+  opacity: 0; transform: translateY(20px);
+  animation: fadeUp 0.8s var(--ease) 0.2s forwards;
+}
+.hero-headline {
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 900; line-height: 0.95;
+  letter-spacing: -0.03em;
+  max-width: 14ch; margin-bottom: 40px;
+}
+.hero-headline .line { display: block; overflow: hidden; }
+.hero-headline .line span {
+  display: block; opacity: 0;
+  transform: translateY(110%);
+  animation: slideUp 0.9s var(--ease) forwards;
+}
+.hero-headline .line:nth-child(1) span { animation-delay: 0.35s; }
+.hero-headline .line:nth-child(2) span { animation-delay: 0.5s; }
+.hero-headline .line:nth-child(3) span { animation-delay: 0.65s; }
+.hero-headline em { font-style: normal; color: var(--accent); }
+.hero-sub-row {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  opacity: 0; animation: fadeUp 0.8s var(--ease) 0.9s forwards;
+}
+.hero-body {
+  font-size: 1rem; color: var(--grey3);
+  max-width: 36ch; line-height: 1.7;
+}
+.hero-cta { display: flex; align-items: center; gap: 16px; }
+.btn-primary {
+  background: var(--accent); color: var(--black);
+  padding: 16px 36px;
+  font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: var(--radius);
+  transition: transform 0.25s var(--ease), box-shadow 0.25s;
+  display: inline-block; cursor: pointer;
+}
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(232,255,71,0.4);
+}
+.btn-ghost {
+  font-size: 0.85rem; font-weight: 500;
+  color: var(--grey3); letter-spacing: 0.05em;
+  transition: color 0.2s;
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+}
+.btn-ghost:hover { color: var(--white); }
+.btn-ghost::after {
+  content: '↓'; display: inline-block;
+  transition: transform 0.3s var(--ease);
+}
+.btn-ghost:hover::after { transform: translateY(4px); }
+.hero-ticker {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--grey2);
+  background: var(--grey1); padding: 14px 0;
+  white-space: nowrap;
+}
+.ticker-track {
+  display: inline-flex;
+  animation: ticker 28s linear infinite;
+}
+.ticker-item {
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--grey3); padding: 0 48px;
+}
+.ticker-item span { color: var(--accent); margin-right: 48px; }
+
+/* Approach cards */
+#approach-section { padding: 100px 0 0; }
+#approach-section .section-label { padding: 0 48px; }
+#approach-section .section-title { padding: 0 48px; }
+.scroll-hint {
+  padding: 0 48px 32px;
+  display: flex; align-items: center; gap: 12px;
+  color: var(--grey3); font-size: 0.78rem;
+  font-weight: 500; letter-spacing: 0.05em;
+}
+.scroll-hint-line {
+  width: 48px; height: 1px;
+  background: var(--grey2); position: relative; overflow: hidden;
+}
+.scroll-hint-line::after {
+  content: ''; position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: var(--accent);
+  animation: lineMove 2s var(--ease) infinite;
+}
+.work-scroll-container { overflow-x: auto; overflow-y: hidden; }
+.work-scroll-container::-webkit-scrollbar { display: none; }
+.work-track {
+  display: flex; gap: 24px;
+  padding: 0 48px 80px;
+  width: max-content;
+}
+.work-card {
+  flex: 0 0 420px; height: 520px;
+  background: var(--grey1);
+  border-radius: 8px; overflow: hidden;
+  position: relative;
+  border: 1px solid var(--grey2);
+  transition: border-color 0.3s;
+  cursor: none;
+}
+.work-card:hover { border-color: var(--accent); }
+.work-card-bg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8rem; font-weight: 900;
+  color: var(--grey2); letter-spacing: -0.05em;
+  user-select: none;
+  transition: transform 0.6s var(--ease);
+}
+.work-card:hover .work-card-bg { transform: scale(1.06); }
+.work-card-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10,10,10,0.96) 45%, transparent);
+  padding: 32px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  transform: translateY(56px);
+  transition: transform 0.4s var(--ease);
+}
+.work-card:hover .work-card-overlay { transform: translateY(0); }
+.work-card-tag {
+  font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+.work-card-name {
+  font-size: 1.4rem; font-weight: 800;
+  line-height: 1.1; margin-bottom: 12px;
+}
+.work-card-desc {
+  font-size: 0.85rem; color: var(--grey3);
+  line-height: 1.6;
+}
+
+/* ── Approach card textures ── */
+.card-texture {
+  position: absolute; inset: 0; z-index: 1;
+  overflow: hidden;
+  transition: transform 0.6s var(--ease), opacity 0.4s var(--ease);
+}
+.work-card:hover .card-texture { transform: scale(1.04); }
+.card-index {
+  position: absolute; top: 22px; left: 26px; z-index: 4;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--accent); opacity: 0.75;
+}
+.card-index::before { content: '/ '; color: var(--grey3); }
+.work-card .work-card-overlay { z-index: 3; }
+
+/* 01 — Code */
+.tx-code pre {
+  position: absolute; top: 60px; left: 0; right: -60px; bottom: 0;
+  margin: 0; padding: 0 26px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.82rem; line-height: 2; white-space: pre;
+  color: #41483a;
+  -webkit-mask-image: linear-gradient(to bottom, #000 42%, transparent 90%);
+          mask-image: linear-gradient(to bottom, #000 42%, transparent 90%);
+  transition: color 0.4s var(--ease);
+}
+.tx-code .k { color: #707d3f; }
+.tx-code .t { color: #515b41; }
+.tx-code .s { color: #5d6747; }
+.tx-code .n { color: var(--accent); opacity: 0.55; }
+.work-card:hover .tx-code pre { color: #555e44; }
+
+/* 02 — Speed gauge */
+.tx-speed {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-start; gap: 26px; padding-top: 56px;
+}
+.tx-speed .gauge {
+  width: 156px; height: 156px; border-radius: 50%;
+  background: conic-gradient(var(--accent) 0 356deg, var(--grey2) 356deg 360deg);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  filter: drop-shadow(0 0 22px rgba(232,255,71,0.14));
+}
+.tx-speed .gauge::after {
+  content: ''; position: absolute; inset: 13px;
+  border-radius: 50%; background: var(--grey1);
+}
+.tx-speed .gauge span {
+  position: relative; z-index: 2;
+  font-size: 2.6rem; font-weight: 900; color: var(--accent);
+  letter-spacing: -0.04em;
+}
+.tx-speed .metrics { width: 188px; display: flex; flex-direction: column; gap: 9px; }
+.tx-speed .metric { height: 5px; background: var(--grey2); border-radius: 3px; overflow: hidden; }
+.tx-speed .metric i { display: block; height: 100%; background: var(--accent); opacity: 0.85; border-radius: 3px; }
+
+/* 03 — AI node graph */
+.tx-ai svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tx-ai .edge { stroke: #2c2c2c; stroke-width: 1; }
+.tx-ai .dot { fill: #3c3c3c; }
+.tx-ai .dot-accent { fill: var(--accent); }
+.tx-ai .glow { fill: rgba(232,255,71,0.16); }
+
+/* 04 — Map + pin */
+.tx-map {
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(255,255,255,0.045) 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 39px, rgba(255,255,255,0.045) 39px 40px),
+    linear-gradient(58deg, transparent 47%, rgba(255,255,255,0.05) 47% 49%, transparent 49%);
+}
+.tx-map .pin {
+  position: absolute; top: 36%; left: 52%;
+  width: 28px; height: 28px; margin: -14px 0 0 -14px;
+  background: var(--accent); border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 6px 18px rgba(232,255,71,0.35);
+  z-index: 2;
+}
+.tx-map .pin::after {
+  content: ''; position: absolute; inset: 9px;
+  background: var(--grey1); border-radius: 50%;
+}
+.tx-map .pin-shadow {
+  position: absolute; top: 36%; left: 52%;
+  width: 40px; height: 40px; margin: -6px 0 0 -20px;
+  border: 1px solid rgba(232,255,71,0.4); border-radius: 50%;
+  animation: pinPulse 2.6s var(--ease) infinite;
+}
+@keyframes pinPulse {
+  0%   { transform: scale(0.4); opacity: 0.8; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* 05 — Signal rings */
+.tx-signal { display: flex; align-items: center; justify-content: center; }
+.tx-signal .cluster { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); }
+.tx-signal .ring {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  border: 1px solid var(--grey2); border-radius: 50%;
+}
+.tx-signal .ring:nth-of-type(1) { width: 108px; height: 108px; }
+.tx-signal .ring:nth-of-type(2) { width: 208px; height: 208px; border-color: rgba(255,255,255,0.06); }
+.tx-signal .ring:nth-of-type(3) { width: 320px; height: 320px; border-color: rgba(255,255,255,0.04); }
+.tx-signal .pulse {
+  position: absolute; top: 50%; left: 50%;
+  width: 108px; height: 108px; margin: -54px 0 0 -54px;
+  border: 1px solid var(--accent); border-radius: 50%;
+  animation: signalPulse 3s var(--ease) infinite;
+}
+.tx-signal .node {
+  position: absolute; top: 50%; left: 50%;
+  width: 16px; height: 16px; margin: -8px 0 0 -8px;
+  background: var(--accent); border-radius: 50%;
+  box-shadow: 0 0 18px rgba(232,255,71,0.6);
+}
+@keyframes signalPulse {
+  0%   { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(2.9); opacity: 0; }
+}
+
+/* Services on home */
+#home-services {
+  padding: 100px 48px;
+  border-top: 1px solid var(--grey2);
+}
+.services-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 2px; margin-top: 0;
+  border: 1px solid var(--grey2);
+  border-radius: 8px; overflow: hidden;
+}
+.service-card {
+  background: var(--grey1); padding: 44px;
+  position: relative; overflow: hidden;
+  transition: background 0.3s;
+}
+.service-card:hover { background: var(--grey2); }
+.service-number {
+  font-size: 3.5rem; font-weight: 900;
+  color: var(--grey2); line-height: 1;
+  margin-bottom: 20px;
+  transition: color 0.3s;
+}
+.service-card:hover .service-number { color: var(--accent); }
+.service-name {
+  font-size: 1.25rem; font-weight: 800;
+  margin-bottom: 10px; line-height: 1.1;
+}
+.service-desc {
+  font-size: 0.88rem; color: var(--grey3);
+  line-height: 1.7; margin-bottom: 24px;
+}
+.service-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag {
+  font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--grey3);
+  border: 1px solid var(--grey2);
+  padding: 4px 10px; border-radius: 2px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.service-card:hover .tag { border-color: var(--grey3); color: var(--white); }
+
+/* Home CTA strip */
+.home-cta-strip {
+  padding: 100px 48px;
+  border-top: 1px solid var(--grey2);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 48px;
+}
+.home-cta-left h2 {
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  font-weight: 900; line-height: 1;
+  letter-spacing: -0.02em; margin-bottom: 12px;
+}
+.home-cta-left p { color: var(--grey3); font-size: 0.95rem; max-width: 40ch; }
+.home-cta-right { flex-shrink: 0; display: flex; gap: 16px; align-items: center; }
+.btn-outline {
+  padding: 16px 36px;
+  font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border: 1px solid var(--grey2);
+  border-radius: var(--radius);
+  color: var(--grey3);
+  transition: border-color 0.25s, color 0.25s, transform 0.25s var(--ease);
+  display: inline-block; cursor: pointer;
+}
+.btn-outline:hover {
+  border-color: var(--white); color: var(--white);
+  transform: translateY(-2px);
+}
+
+/* ──────────────────────────────────────────
+   PRICING PAGE
+   ────────────────────────────────────────── */
+#page-pricing {
+  padding: 80px 48px 120px;
+}
+.pricing-header { margin-bottom: 72px; }
+.pricing-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  border: 1px solid var(--grey2);
+  border-radius: 12px; overflow: hidden;
+  margin-bottom: 80px;
+}
+.pricing-card {
+  background: var(--grey1); padding: 44px 36px;
+  position: relative; transition: background 0.3s;
+  display: flex; flex-direction: column;
+}
+.pricing-card.featured {
+  background: var(--grey2);
+}
+.pricing-card.featured .pricing-name { color: var(--accent); }
+.featured-badge {
+  position: absolute; top: 20px; right: 20px;
+  background: var(--accent); color: var(--black);
+  font-size: 0.62rem; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 2px;
+}
+.pricing-name {
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--grey3); margin-bottom: 12px;
+}
+.pricing-price {
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 900; line-height: 1;
+  letter-spacing: -0.03em; margin-bottom: 6px;
+}
+.pricing-price span { color: var(--accent); }
+.pricing-cadence {
+  font-size: 0.8rem; color: var(--grey3);
+  margin-bottom: 32px;
+}
+.pricing-divider {
+  height: 1px; background: var(--grey2);
+  margin-bottom: 28px;
+}
+.pricing-features {
+  list-style: none; display: flex; flex-direction: column; gap: 12px;
+  margin-bottom: 36px;
+}
+.pricing-features li {
+  font-size: 0.88rem; color: var(--grey3);
+  display: flex; align-items: flex-start; gap: 10px;
+  line-height: 1.5;
+}
+.pricing-features li::before {
+  content: '✓';
+  color: var(--accent); font-weight: 700;
+  flex-shrink: 0; margin-top: 1px;
+}
+.pricing-features li.muted { opacity: 0.4; }
+.pricing-features li.muted::before { content: '✕'; color: var(--grey3); font-weight: 700; }
+.pricing-cta {
+  display: block; width: 100%; text-align: center;
+  margin-top: auto;
+  padding: 14px;
+  font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: var(--radius);
+  border: 1px solid var(--grey2);
+  color: var(--grey3);
+  transition: all 0.2s var(--ease);
+  cursor: pointer;
+}
+.pricing-cta:hover { border-color: var(--white); color: var(--white); }
+.pricing-card.featured .pricing-cta {
+  background: var(--accent); border-color: var(--accent);
+  color: var(--black);
+}
+.pricing-card.featured .pricing-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232,255,71,0.35);
+}
+.pricing-note {
+  text-align: center;
+  font-size: 0.85rem; color: var(--grey3); line-height: 1.7;
+}
+.pricing-note a { color: var(--accent); }
+.pricing-addons {
+  margin-top: 80px;
+  border-top: 1px solid var(--grey2);
+  padding-top: 64px;
+}
+.addons-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 24px; margin-top: 40px;
+}
+.addon-card {
+  background: var(--grey1); border: 1px solid var(--grey2);
+  border-radius: 8px; padding: 28px;
+  transition: border-color 0.3s;
+}
+.addon-card:hover { border-color: var(--accent); }
+.addon-price {
+  font-size: 1.4rem; font-weight: 900;
+  color: var(--accent); margin-bottom: 6px;
+}
+.addon-name {
+  font-size: 0.95rem; font-weight: 700; margin-bottom: 8px;
+}
+.addon-desc { font-size: 0.83rem; color: var(--grey3); line-height: 1.6; }
+
+/* ──────────────────────────────────────────
+   FAQ PAGE
+   ────────────────────────────────────────── */
+#page-faq { padding: 80px 48px 120px; }
+.faq-header { margin-bottom: 64px; max-width: 60ch; }
+.faq-list { max-width: 780px; }
+.faq-item {
+  border-bottom: 1px solid var(--grey2);
+  overflow: hidden;
+}
+.faq-question {
+  width: 100%; text-align: left; background: none; border: none;
+  color: var(--white);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 28px 0; gap: 24px;
+  font-size: 1rem; font-weight: 600; line-height: 1.4;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.faq-question:hover { color: var(--accent); }
+.faq-icon {
+  flex-shrink: 0; width: 28px; height: 28px;
+  border: 1px solid var(--grey2); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; color: var(--grey3);
+  transition: transform 0.35s var(--ease), border-color 0.2s, color 0.2s;
+}
+.faq-item.open .faq-icon {
+  transform: rotate(45deg);
+  border-color: var(--accent); color: var(--accent);
+}
+.faq-answer {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.4s var(--ease);
+}
+.faq-answer-inner {
+  padding-bottom: 28px;
+  font-size: 0.93rem; color: var(--grey3);
+  line-height: 1.8; max-width: 64ch;
+}
+.faq-answer-inner a { color: var(--accent); }
+
+/* ──────────────────────────────────────────
+   ABOUT PAGE
+   ────────────────────────────────────────── */
+#page-about { padding: 80px 48px 120px; }
+.about-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: start;
+}
+.about-left {}
+.about-eyebrow {
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 20px;
+}
+.about-headline {
+  font-size: clamp(2.2rem, 4vw, 3.8rem);
+  font-weight: 900; line-height: 0.95;
+  letter-spacing: -0.03em; margin-bottom: 36px;
+}
+.about-body {
+  font-size: 0.95rem; color: var(--grey3);
+  line-height: 1.85; margin-bottom: 20px;
+}
+.about-body strong { color: var(--white); font-weight: 600; }
+.cmu-badge {
+  margin-top: 40px;
+  border: 1px solid var(--grey2); border-radius: 8px;
+  position: relative; overflow: hidden;
+  overflow: hidden; transition: border-color 0.3s;
+}
+.cmu-badge:hover { border-color: var(--accent); }
+.cmu-badge-photo {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('cmu-gates.jpg');
+  background-size: cover; background-position: center 38%;
+}
+.cmu-badge-photo::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(to right, var(--grey1) 12%, rgba(20,20,20,0.82) 55%, rgba(20,20,20,0.6) 100%),
+    linear-gradient(to top, var(--grey1) 0%, transparent 60%);
+}
+.cmu-badge-inner {
+  padding: 28px 32px;
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; gap: 6px;
+  position: relative;
+}
+.cmu-badge-inner::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%; background: var(--accent);
+}
+.cmu-label {
+  font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--grey3);
+}
+.cmu-name {
+  font-size: 1.1rem; font-weight: 800;
+  color: var(--white); line-height: 1.2;
+}
+.cmu-dept { font-size: 0.8rem; color: var(--grey3); margin-bottom: 12px; }
+.cmu-ranks { display: flex; gap: 10px; flex-wrap: wrap; }
+.cmu-rank {
+  font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--black); background: var(--accent);
+  padding: 4px 10px; border-radius: 2px;
+}
+.about-right {}
+.about-values { display: flex; flex-direction: column; gap: 0; }
+.value-item {
+  padding: 28px 0;
+  border-bottom: 1px solid var(--grey2);
+  display: flex; gap: 24px;
+  opacity: 0; transform: translateX(24px);
+  transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+}
+.value-item.visible { opacity: 1; transform: none; }
+.value-marker {
+  color: var(--accent);
+  min-width: 26px; padding-top: 2px;
+  display: flex; align-items: flex-start; justify-content: center;
+}
+.value-marker svg {
+  width: 24px; height: 24px;
+  stroke: var(--accent); stroke-width: 1.6;
+  fill: none; stroke-linecap: round; stroke-linejoin: round;
+}
+.value-content {}
+.value-title {
+  font-size: 1rem; font-weight: 700; margin-bottom: 6px;
+}
+.value-desc { font-size: 0.87rem; color: var(--grey3); line-height: 1.7; }
+
+/* ──────────────────────────────────────────
+   CONTACT PAGE
+   ────────────────────────────────────────── */
+#page-contact {
+  padding: 80px 48px 120px;
+  position: relative; overflow: hidden;
+}
+.contact-bg-text {
+  position: absolute; top: 40px; right: -40px;
+  font-size: clamp(6rem, 18vw, 16rem);
+  font-weight: 900; color: var(--grey1);
+  white-space: nowrap; letter-spacing: -0.05em;
+  pointer-events: none; user-select: none;
+  z-index: 0; line-height: 1;
+}
+.contact-inner { position: relative; z-index: 1; }
+.contact-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: start; margin-top: 16px;
+}
+.contact-left {}
+.contact-headline {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 900; line-height: 0.95;
+  letter-spacing: -0.03em; margin-bottom: 24px;
+}
+.contact-sub {
+  color: var(--grey3); font-size: 0.95rem;
+  line-height: 1.8; max-width: 40ch; margin-bottom: 48px;
+}
+.contact-methods { display: flex; flex-direction: column; gap: 16px; }
+.contact-method {
+  display: flex; align-items: center; gap: 16px;
+  padding: 20px 24px;
+  background: var(--grey1); border: 1px solid var(--grey2);
+  border-radius: 8px;
+  transition: border-color 0.3s, transform 0.3s var(--ease);
+}
+.contact-method:hover { border-color: var(--accent); transform: translateX(6px); }
+.method-icon {
+  width: 36px; height: 36px;
+  background: var(--grey2); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.method-label {
+  font-size: 0.68rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--grey3); margin-bottom: 2px;
+}
+.method-value { font-size: 0.92rem; font-weight: 600; color: var(--white); }
+.contact-right {}
+.contact-form { display: flex; flex-direction: column; gap: 20px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-label {
+  font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--grey3);
+}
+.form-input, .form-select, .form-textarea {
+  background: var(--grey1); border: 1px solid var(--grey2);
+  border-radius: var(--radius); color: var(--white);
+  font-family: inherit; font-size: 0.9rem;
+  padding: 14px 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none; width: 100%;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(232,255,71,0.1);
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--grey3); }
+.form-select { cursor: pointer; appearance: none; }
+.form-select option { background: var(--grey1); }
+.form-textarea { resize: vertical; min-height: 140px; }
+.form-submit {
+  background: var(--accent); color: var(--black);
+  border: none; padding: 18px 40px;
+  font-family: inherit; font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: var(--radius);
+  transition: transform 0.25s var(--ease), box-shadow 0.25s;
+  cursor: pointer; align-self: flex-start;
+}
+.form-submit:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(232,255,71,0.4);
+}
+.form-submit:disabled { cursor: default; transform: none; box-shadow: none; }
+.form-error {
+  font-size: 0.82rem; color: #ff6b6b;
+  line-height: 1.5; margin-top: -4px;
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 36px 48px;
+  border-top: 1px solid var(--grey2);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-logo {
+  font-size: 0.85rem; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.footer-logo span { color: var(--accent); }
+.footer-copy { font-size: 0.75rem; color: var(--grey3); }
+.footer-links { display: flex; gap: 24px; list-style: none; }
+.footer-links a {
+  font-size: 0.75rem; color: var(--grey3);
+  transition: color 0.2s; letter-spacing: 0.06em;
+}
+.footer-links a:hover { color: var(--white); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes lineMove {
+  0%   { left: -100%; }
+  50%  { left: 0; }
+  100% { left: 100%; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 960px) {
+  nav { padding: 0 24px; }
+  .nav-links li:not(:last-child) a:not(.nav-cta) { display: none; }
+  #hero, #page-pricing, #page-faq, #page-about, #page-contact { padding-left: 24px; padding-right: 24px; }
+  #hero { padding-bottom: 80px; }
+  .hero-photo {
+    width: 100%; opacity: 0.32;
+    z-index: 0;
+  }
+  .hero-photo img { object-position: 50% 14%; }
+  .hero-photo-veil {
+    background:
+      linear-gradient(to bottom, var(--black) 0%, transparent 26%, transparent 64%, var(--black) 100%);
+  }
+  .hero-content { width: 100%; }
+  .hero-sub-row { flex-direction: column; align-items: flex-start; gap: 28px; }
+  #approach-section .section-label,
+  #approach-section .section-title,
+  .scroll-hint { padding-left: 24px; padding-right: 24px; }
+  .work-track { padding: 0 24px 60px; }
+  #home-services { padding: 80px 24px; }
+  .services-grid { grid-template-columns: 1fr; }
+  .home-cta-strip { flex-direction: column; align-items: flex-start; padding: 80px 24px; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .addons-grid { grid-template-columns: 1fr 1fr; }
+  .about-grid { grid-template-columns: 1fr; gap: 48px; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  footer { padding: 28px 24px; flex-direction: column; gap: 16px; text-align: center; }
+  body { cursor: auto; }
+  #cursor { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .hero-headline .line span,
+  .hero-eyebrow, .hero-sub-row { opacity: 1 !important; transform: none !important; }
+  .hero-photo img { opacity: 1 !important; transform: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<!-- ── NAV ── -->
+<nav id="nav">
+  <div id="scroll-progress"></div>
+  <span class="nav-logo" data-page="home">Ted<span>.</span>Baern</span>
+  <ul class="nav-links">
+    <li><a data-page="home">Home</a></li>
+    <li><a data-page="about">About</a></li>
+    <li><a data-page="pricing">Pricing</a></li>
+    <li><a data-page="faq">FAQ</a></li>
+    <li><a data-page="contact" class="nav-cta">Get in Touch</a></li>
+  </ul>
+</nav>
+
+<div id="app">
+
+<!-- ═══════════════════════════════════════
+     HOME
+═══════════════════════════════════════ -->
+<div class="page" id="page-home">
+
+  <section id="hero">
+    <div class="hero-photo">
+      <img src="ted-hero-5e1a48b0.jpg" alt="Ted Baern" width="790" height="719" decoding="async" fetchpriority="high"/>
+      <div class="hero-photo-veil"></div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">CS Student · Carnegie Mellon University · Web Design for Local Business</p>
+      <h1 class="hero-headline">
+        <span class="line"><span>Websites built</span></span>
+        <span class="line"><span>to the highest</span></span>
+        <span class="line"><span><em>standard.</em></span></span>
+      </h1>
+      <div class="hero-sub-row">
+        <p class="hero-body">I'm a Computer Science student at Carnegie Mellon, the #1 CS and AI school in the world. I build fast, efficient websites for small businesses that deserve better than a template.</p>
+        <div class="hero-cta">
+          <span class="btn-primary" data-page="contact">Start a Project</span>
+          <span class="btn-ghost" data-scroll="approach-section">How I work</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-ticker">
+      <div class="ticker-track">
+        <span class="ticker-item">Engineered from scratch <span>✦</span></span>
+        <span class="ticker-item">CMU Computer Science <span>✦</span></span>
+        <span class="ticker-item">Performance-obsessed <span>✦</span></span>
+        <span class="ticker-item">Mobile-first <span>✦</span></span>
+        <span class="ticker-item">99 Lighthouse score <span>✦</span></span>
+        <span class="ticker-item">No templates. No bloat. <span>✦</span></span>
+        <span class="ticker-item">Fast delivery <span>✦</span></span>
+        <span class="ticker-item">Local business specialist <span>✦</span></span>
+        <span class="ticker-item">Engineered from scratch <span>✦</span></span>
+        <span class="ticker-item">CMU Computer Science <span>✦</span></span>
+        <span class="ticker-item">Performance-obsessed <span>✦</span></span>
+        <span class="ticker-item">Mobile-first <span>✦</span></span>
+        <span class="ticker-item">99 Lighthouse score <span>✦</span></span>
+        <span class="ticker-item">No templates. No bloat. <span>✦</span></span>
+        <span class="ticker-item">Fast delivery <span>✦</span></span>
+        <span class="ticker-item">Local business specialist <span>✦</span></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="approach-section">
+    <p class="section-label reveal">The Approach</p>
+    <h2 class="section-title reveal">Built different.<br>By design.</h2>
+    <div class="scroll-hint">
+      <div class="scroll-hint-line"></div>
+      Drag to explore
+    </div>
+    <div class="work-scroll-container" id="workContainer">
+      <div class="work-track" id="workTrack">
+        <div class="work-card">
+          <div class="card-texture tx-code"><pre><span class="t">&lt;section</span> <span class="k">class</span>=<span class="s">"hero"</span><span class="t">&gt;</span>
+  <span class="t">&lt;h1&gt;</span>Built right.<span class="t">&lt;/h1&gt;</span>
+<span class="t">&lt;/section&gt;</span>
+
+<span class="k">const</span> score = <span class="n">99</span>;
+<span class="k">function</span> ship(site) {
+  <span class="k">return</span> optimize(site);
+}</pre></div>
+          <span class="card-index">01</span>
+          <div class="work-card-overlay">
+            <p class="work-card-tag">Code Quality</p>
+            <h3 class="work-card-name">Engineered from scratch.</h3>
+            <p class="work-card-desc">No WordPress. No Wix. No drag-and-drop builders. Every line of HTML, CSS, and JavaScript is written from scratch, the way computer science teaches you to build things that actually work.</p>
+          </div>
+        </div>
+        <div class="work-card">
+          <div class="card-texture tx-speed">
+            <div class="gauge"><span>99</span></div>
+            <div class="metrics">
+              <div class="metric"><i style="width:97%"></i></div>
+              <div class="metric"><i style="width:90%"></i></div>
+              <div class="metric"><i style="width:99%"></i></div>
+            </div>
+          </div>
+          <span class="card-index">02</span>
+          <div class="work-card-overlay">
+            <p class="work-card-tag">Performance</p>
+            <h3 class="work-card-name">Obsessed with speed.</h3>
+            <p class="work-card-desc">A one-second delay in page load reduces conversions by 7%. I target 99/100 Lighthouse scores on every build because for your business, good "enough" doesn't exist.</p>
+          </div>
+        </div>
+        <div class="work-card">
+          <div class="card-texture tx-ai">
+            <svg viewBox="0 0 420 520" preserveAspectRatio="xMidYMid slice">
+              <g class="edge">
+                <line x1="60" y1="80" x2="160" y2="150"/>
+                <line x1="160" y1="150" x2="255" y2="95"/>
+                <line x1="160" y1="150" x2="115" y2="255"/>
+                <line x1="255" y1="95" x2="330" y2="205"/>
+                <line x1="115" y1="255" x2="215" y2="330"/>
+                <line x1="330" y1="205" x2="215" y2="330"/>
+                <line x1="215" y1="330" x2="300" y2="370"/>
+                <line x1="115" y1="255" x2="95" y2="405"/>
+                <line x1="95" y1="405" x2="185" y2="470"/>
+                <line x1="215" y1="330" x2="185" y2="470"/>
+                <line x1="300" y1="370" x2="365" y2="460"/>
+                <line x1="300" y1="370" x2="185" y2="470"/>
+                <line x1="330" y1="205" x2="300" y2="370"/>
+              </g>
+              <circle class="glow" cx="60" cy="80" r="13"/>
+              <circle class="glow" cx="330" cy="205" r="13"/>
+              <circle class="glow" cx="185" cy="470" r="13"/>
+              <circle class="dot-accent" cx="60" cy="80" r="5"/>
+              <circle class="dot-accent" cx="330" cy="205" r="5"/>
+              <circle class="dot-accent" cx="185" cy="470" r="5"/>
+              <circle class="dot" cx="160" cy="150" r="4"/>
+              <circle class="dot" cx="255" cy="95" r="4"/>
+              <circle class="dot" cx="115" cy="255" r="4"/>
+              <circle class="dot" cx="215" cy="330" r="4"/>
+              <circle class="dot" cx="300" cy="370" r="4"/>
+              <circle class="dot" cx="95" cy="405" r="4"/>
+              <circle class="dot" cx="365" cy="460" r="4"/>
+            </svg>
+          </div>
+          <span class="card-index">03</span>
+          <div class="work-card-overlay">
+            <p class="work-card-tag">AI-Powered</p>
+            <h3 class="work-card-name">The frontier, applied.</h3>
+            <p class="work-card-desc">Studying at the #1 AI school in the world means I'm not just using AI tools, but I understand how they work. That translates into smarter copy, better SEO, and faster builds for you.</p>
+          </div>
+        </div>
+        <div class="work-card">
+          <div class="card-texture tx-map">
+            <span class="pin-shadow"></span>
+            <span class="pin"></span>
+          </div>
+          <span class="card-index">04</span>
+          <div class="work-card-overlay">
+            <p class="work-card-tag">Local SEO</p>
+            <h3 class="work-card-name">Built to get found.</h3>
+            <p class="work-card-desc">Structured data, Google Business integration, fast-loading pages, and location-specific copy, the technical foundations that get small businesses ranking in their neighborhoods.</p>
+          </div>
+        </div>
+        <div class="work-card">
+          <div class="card-texture tx-signal">
+            <div class="cluster">
+              <span class="ring"></span>
+              <span class="ring"></span>
+              <span class="ring"></span>
+              <span class="pulse"></span>
+              <span class="node"></span>
+            </div>
+          </div>
+          <span class="card-index">05</span>
+          <div class="work-card-overlay">
+            <p class="work-card-tag">Direct Access</p>
+            <h3 class="work-card-name">You talk to the builder.</h3>
+            <p class="work-card-desc">No account managers. No handoffs. No agency markups. You get my direct line, my full attention, and a site that reflects exactly what we discussed, not what someone else interpreted.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="home-services">
+    <p class="section-label reveal">What I Do</p>
+    <h2 class="section-title reveal">Every service.<br>Engineered to perform.</h2>
+    <div class="services-grid reveal">
+      <div class="service-card">
+        <div class="service-number">01</div>
+        <h3 class="service-name">Website Design & Build</h3>
+        <p class="service-desc">A fully custom, purpose-built site designed around your brand, your customers, and your goals. No templates. No bloat. Just something that works.</p>
+        <div class="service-tags">
+          <span class="tag">Custom Design</span>
+          <span class="tag">Mobile-first</span>
+          <span class="tag">Fast delivery</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-number">02</div>
+        <h3 class="service-name">Local SEO</h3>
+        <p class="service-desc">Your site optimized to rank in your city. Structured data, Google Business integration, location pages, and site speed all handled for you.</p>
+        <div class="service-tags">
+          <span class="tag">Google Maps</span>
+          <span class="tag">Schema Markup</span>
+          <span class="tag">Core Web Vitals</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-number">03</div>
+        <h3 class="service-name">Booking & E-commerce</h3>
+        <p class="service-desc">Appointment systems, online stores, and payment flows built right into your site — so you make money while you sleep.</p>
+        <div class="service-tags">
+          <span class="tag">Stripe</span>
+          <span class="tag">Calendly / Cal.com</span>
+          <span class="tag">Shopify</span>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-number">04</div>
+        <h3 class="service-name">Maintenance & Growth</h3>
+        <p class="service-desc">Monthly retainers for businesses that want ongoing updates, analytics reviews, landing page tests, and a developer always on call.</p>
+        <div class="service-tags">
+          <span class="tag">Analytics</span>
+          <span class="tag">A/B Testing</span>
+          <span class="tag">Priority Support</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="home-cta-strip reveal">
+    <div class="home-cta-left">
+      <h2>Ready to build<br>something real?</h2>
+      <p>First conversation is always free — no pitch, just a genuine talk about what you need.</p>
+    </div>
+    <div class="home-cta-right">
+      <span class="btn-primary" data-page="contact">Get in Touch</span>
+      <span class="btn-outline" data-page="pricing">See Pricing</span>
+    </div>
+  </div>
+
+</div><!-- /page-home -->
+
+
+<!-- ═══════════════════════════════════════
+     PRICING
+═══════════════════════════════════════ -->
+<div class="page" id="page-pricing">
+  <div class="pricing-header">
+    <p class="section-label">Pricing</p>
+    <h1 class="section-title" data-typewriter style="margin-bottom:16px;">Transparent pricing.<br>No surprises.</h1>
+    <p style="color:var(--grey3);font-size:0.95rem;max-width:48ch;line-height:1.7;">Every project is scoped to what you actually need. These packages cover the most common starting points.
+Not sure which fits? Let's talk.</p>
+  </div>
+
+  <div class="pricing-grid">
+    <!-- Starter -->
+    <div class="pricing-card">
+      <p class="pricing-name">Starter</p>
+      <p class="pricing-price">$<span>1,599</span></p>
+      <p class="pricing-cadence">one-time · delivered in ~1 week</p>
+      <div class="pricing-divider"></div>
+      <ul class="pricing-features">
+        <li>Up to 4 pages</li>
+        <li>Custom design (no templates)</li>
+        <li>Mobile-responsive</li>
+        <li>Contact form</li>
+        <li>Google Analytics setup</li>
+        <li>Submitted to Google Search</li>
+        <li class="muted">Local SEO optimization</li>
+        <li class="muted">Booking / e-commerce</li>
+        <li class="muted">Monthly maintenance</li>
+      </ul>
+      <span class="pricing-cta" data-page="contact">Get Started</span>
+    </div>
+
+    <!-- Growth (featured) -->
+    <div class="pricing-card featured">
+      <span class="featured-badge">BEST VALUE</span>
+      <p class="pricing-name">Growth</p>
+      <p class="pricing-price">$<span>1,999</span></p>
+      <p class="pricing-cadence">one-time · delivered in ~2 weeks</p>
+      <div class="pricing-divider"></div>
+      <ul class="pricing-features">
+        <li>Up to 8 pages</li>
+        <li>Custom design (no templates)</li>
+        <li>Mobile-responsive</li>
+        <li>Contact form</li>
+        <li>Google Analytics setup</li>
+        <li>Submitted to Google Search</li>
+        <li>Local SEO optimization</li>
+        <li>Google Business integration</li>
+        <li class="muted">Booking / e-commerce</li>
+        <li class="muted">Monthly maintenance</li>
+      </ul>
+      <span class="pricing-cta" data-page="contact">Get Started</span>
+    </div>
+
+    <!-- Pro -->
+    <div class="pricing-card">
+      <p class="pricing-name">Pro</p>
+      <p class="pricing-price">$<span>2,799</span></p>
+      <p class="pricing-cadence">one-time · delivered in ~3 weeks</p>
+      <div class="pricing-divider"></div>
+      <ul class="pricing-features">
+        <li>Unlimited pages</li>
+        <li>Custom design (no templates)</li>
+        <li>Mobile-responsive</li>
+        <li>Contact form</li>
+        <li>Google Analytics setup</li>
+        <li>Submitted to Google Search</li>
+        <li>Full local SEO optimization</li>
+        <li>Google Business integration</li>
+        <li>Booking or e-commerce</li>
+        <li>1 month free maintenance</li>
+      </ul>
+      <span class="pricing-cta" data-page="contact">Get Started</span>
+    </div>
+  </div>
+
+  <p class="pricing-note">All packages include a free discovery call, two rounds of revisions, and a handoff walkthrough.<br>Need something that doesn't fit neatly? <span style="color:var(--accent);cursor:pointer;" data-page="contact">Custom quotes available.</span></p>
+
+  <div class="pricing-addons">
+    <p class="section-label">Add-ons</p>
+    <h2 style="font-size:clamp(1.6rem,3vw,2.4rem);font-weight:900;letter-spacing:-0.02em;margin-bottom:8px;">Build exactly what you need.</h2>
+    <p style="color:var(--grey3);font-size:0.9rem;">These can be added to any package.</p>
+    <div class="addons-grid">
+      <div class="addon-card">
+        <p class="addon-price">+$299</p>
+        <p class="addon-name">Booking System</p>
+        <p class="addon-desc">Cal.com or Calendly integration with custom styling matched to your site.</p>
+      </div>
+      <div class="addon-card">
+        <p class="addon-price">+$199/mo</p>
+        <p class="addon-name">Maintenance Retainer</p>
+        <p class="addon-desc">Monthly content updates, analytics reports, and a developer on call.</p>
+      </div>
+      <div class="addon-card">
+        <p class="addon-price">+$399</p>
+        <p class="addon-name">E-commerce Setup</p>
+        <p class="addon-desc">Shopify or Stripe integration with product pages and a checkout flow.</p>
+      </div>
+      <div class="addon-card">
+        <p class="addon-price">+$149</p>
+        <p class="addon-name">Logo & Brand Kit</p>
+        <p class="addon-desc">A wordmark logo, color palette, and type system delivered as usable files.</p>
+      </div>
+      <div class="addon-card">
+        <p class="addon-price">+$249</p>
+        <p class="addon-name">Extra Revision Round</p>
+        <p class="addon-desc">An additional full round of design revisions beyond what's included in your package.</p>
+      </div>
+      <div class="addon-card">
+        <p class="addon-price">+$199</p>
+        <p class="addon-name">Speed Audit</p>
+        <p class="addon-desc">Full Lighthouse audit with a written report and fixes implemented until the score is 95+.</p>
+      </div>
+    </div>
+  </div>
+</div><!-- /page-pricing -->
+
+
+<!-- ═══════════════════════════════════════
+     FAQ
+═══════════════════════════════════════ -->
+<div class="page" id="page-faq">
+  <div class="faq-header">
+    <p class="section-label">FAQ</p>
+    <h1 class="section-title" data-typewriter style="margin-bottom:16px;">Questions,<br>answered honestly.</h1>
+    <p style="color:var(--grey3);font-size:0.95rem;line-height:1.7;">Can't find what you're looking for? <span style="color:var(--accent);cursor:pointer;" data-page="contact">Just ask me directly.</span></p>
+  </div>
+  <div class="faq-list">
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Why not just build it myself in Wix?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">You can — but Wix builds your site on top of its own bloated framework, which means slower load times, lower Google rankings, and a $200+/year bill that never ends. You're also limited to their templates and locked into their platform forever. A site engineered from scratch loads in a fraction of the time, ranks higher, costs nothing to host, and is yours to keep. And the hours you'd spend wrestling with a drag-and-drop builder are hours away from actually running your business — I handle all of it, and the result looks like it cost far more than it did.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Do you use Wix, Squarespace, or WordPress?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">No. Every site I build is engineered from scratch in HTML, CSS, and JavaScript (or a framework like Next.js for more complex projects). This means no monthly platform fees, no plugin conflicts, no bloat slowing your site down. You own the code outright.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        How long does a project take?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">Starter sites typically launch in about a week. Growth packages take around two weeks. Pro projects and custom builds usually run three to four weeks. Timelines depend on how quickly you can provide content (text, photos, etc.) and feedback during revisions.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Will I be able to update the site myself?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">Yes. For clients who want to manage their own content, I can build on a headless CMS (like Sanity or Contentful) that gives you a simple dashboard — no code required. Otherwise, I can handle updates for you via a maintenance retainer.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        You're a student — what if something breaks?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">Fair question. Every site I ship comes with a 30-day bug fix guarantee — if anything breaks within 30 days of launch, I fix it for free, fast. For ongoing peace of mind, my maintenance retainer keeps me available on an ongoing basis. Being a student also means I'm not juggling 40 client accounts; you get my full attention.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        What do you need from me to get started?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">To kick things off, I need a sense of what your business does, who your customers are, and any examples of sites you like or dislike. Content (your logo, photos, written copy) comes later — I'll walk you through exactly what's needed after our first call.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        How does payment work?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">I collect 50% upfront to reserve your spot and begin the project, and the remaining 50% on launch day. Payment is via bank transfer, Venmo, or Stripe. No payment is due until after our free discovery call and you've decided to move forward.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Do you offer hosting?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">I deploy sites to Vercel (for Next.js projects) or Netlify, both of which have excellent free tiers that cover most small business needs. I'll set everything up and transfer ownership to you at launch. If you already have hosting, I can deploy there instead.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question">
+        Can you redesign my existing site?
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">Absolutely. Redesigns follow the same process as new builds — we start from your goals and your customers, not from what's already there. If you have content you want to keep, I'll migrate it. Pricing is the same as a new build since the work involved is similar.</div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /page-faq -->
+
+
+<!-- ═══════════════════════════════════════
+     ABOUT
+═══════════════════════════════════════ -->
+<div class="page" id="page-about">
+  <div class="about-grid">
+    <div class="about-left">
+      <p class="about-eyebrow">About Ted</p>
+      <h1 class="about-headline" data-typewriter>Trained at the top.<br>Working for you.</h1>
+      <p class="about-body">I'm <strong>Ted Baern</strong>, a Computer Science student at Carnegie Mellon University — consistently ranked <strong>#1 in the world</strong> for both Computer Science and Artificial Intelligence.</p>
+      <p class="about-body">I started building websites because I kept seeing the same thing: small businesses with real value to offer, stuck with generic templates or overpriced agencies that didn't understand what they actually needed. I can do better, and I can do it for a fraction of what agencies charge.</p>
+      <p class="about-body">At CMU, I study algorithms, systems design, and software engineering at the deepest level. That rigor doesn't stay in the classroom — it's in every site I build. Lean code, fast load times, clean architecture. The technical standard you'd expect from someone who <em>actually</em> knows how the web works.</p>
+      <p class="about-body">I work with a small number of clients at a time, by design. You won't be handed off to a junior or lost in a queue. When you hire me, you get me.</p>
+
+      <div class="cmu-badge">
+        <div class="cmu-badge-photo"></div>
+        <div class="cmu-badge-inner">
+          <span class="cmu-label">Currently studying at</span>
+          <span class="cmu-name">Carnegie Mellon University</span>
+          <span class="cmu-dept">School of Computer Science · Pittsburgh, PA</span>
+          <div class="cmu-ranks">
+            <span class="cmu-rank">#1 Computer Science</span>
+            <span class="cmu-rank">#1 Artificial Intelligence</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="about-right">
+      <div class="about-values">
+        <div class="value-item">
+          <span class="value-marker"><svg viewBox="0 0 24 24"><path d="M4.5 16a7.5 7.5 0 0 1 15 0"/><path d="M12 16l4-4.5"/><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"/></svg></span>
+          <div class="value-content">
+            <h3 class="value-title">Performance is non-negotiable.</h3>
+            <p class="value-desc">I won't ship a site with a Lighthouse score below 90. Speed isn't a feature — it's the foundation. A slow site loses customers before they read a single word.</p>
+          </div>
+        </div>
+        <div class="value-item">
+          <span class="value-marker"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 9h16"/><path d="M7 4v2"/></svg></span>
+          <div class="value-content">
+            <h3 class="value-title">No templates. Ever.</h3>
+            <p class="value-desc">Every site is designed from a blank canvas around your specific business, audience, and goals. The design should be unmistakably yours — not a theme someone else already bought.</p>
+          </div>
+        </div>
+        <div class="value-item">
+          <span class="value-marker"><svg viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 3.5V6a1 1 0 0 1 1-1z"/></svg></span>
+          <div class="value-content">
+            <h3 class="value-title">You deserve to understand what you're paying for.</h3>
+            <p class="value-desc">I explain every decision in plain language. No jargon used to justify billing hours. If I'm doing something, you'll know why — and if you disagree, we'll talk about it.</p>
+          </div>
+        </div>
+        <div class="value-item">
+          <span class="value-marker"><svg viewBox="0 0 24 24"><path d="M4 20V8l6-3 6 3v12"/><path d="M4 20h16"/><path d="M16 20V11l4 2v7"/><path d="M8 11h0M8 14h0M11.5 11h0M11.5 14h0" stroke-width="2"/></svg></span>
+          <div class="value-content">
+            <h3 class="value-title">Small businesses deserve serious engineering.</h3>
+            <p class="value-desc">The corner restaurant and the local law firm shouldn't have to settle for worse technology than a Fortune 500 company. The tools are the same — what matters is who's wielding them.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /page-about -->
+
+
+<!-- ═══════════════════════════════════════
+     CONTACT
+═══════════════════════════════════════ -->
+<div class="page" id="page-contact">
+  <div class="contact-bg-text">HELLO</div>
+  <div class="contact-inner">
+    <p class="section-label">Get in Touch</p>
+    <div class="contact-grid">
+      <div class="contact-left">
+        <h1 class="contact-headline" data-typewriter>Let's build<br>something<br>great.</h1>
+        <p class="contact-sub">Tell me about your business and what you're trying to accomplish. First conversation is always free — no sales pitch, just a real talk about what you need.</p>
+        <div class="contact-methods">
+          <a href="mailto:theobaern@gmail.com" class="contact-method">
+            <div class="method-icon">✉</div>
+            <div>
+              <p class="method-label">Email</p>
+              <p class="method-value">theobaern@gmail.com</p>
+            </div>
+          </a>
+          <a href="https://cal.com" target="_blank" class="contact-method">
+            <div class="method-icon">📅</div>
+            <div>
+              <p class="method-label">Book a Call</p>
+              <p class="method-value">Free 30-min discovery call</p>
+            </div>
+          </a>
+          <a href="https://linkedin.com/tedbaern" target="_blank" rel="noopener noreferrer" class="contact-method">
+            <div class="method-icon">in</div>
+            <div>
+              <p class="method-label">LinkedIn</p>
+              <p class="method-value">linkedin.com/tedbaern</p>
+            </div>
+          </a>
+        </div>
+      </div>
+      <div class="contact-right">
+        <form class="contact-form" onsubmit="handleFormSubmit(event)" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cf-first">First Name</label>
+              <input id="cf-first" name="firstName" class="form-input" type="text" autocomplete="given-name" placeholder="Jane" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="cf-last">Last Name</label>
+              <input id="cf-last" name="lastName" class="form-input" type="text" autocomplete="family-name" placeholder="Smith" required/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cf-email">Email</label>
+            <input id="cf-email" name="email" class="form-input" type="email" autocomplete="email" placeholder="jane@yourbusiness.com" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cf-business">Business Name</label>
+            <input id="cf-business" name="business" class="form-input" type="text" autocomplete="organization" placeholder="Smith Plumbing Co."/>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cf-package">What are you looking for?</label>
+            <select id="cf-package" name="package" class="form-select form-input">
+              <option value="">Select a package...</option>
+              <option>Starter — $1,599</option>
+              <option>Growth — $1,999</option>
+              <option>Pro — $2,799</option>
+              <option>Custom / Not sure yet</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="cf-project">Tell me about your project</label>
+            <textarea id="cf-project" name="project" class="form-textarea" placeholder="What does your business do? What's not working about your current online presence? What matters most to you in a new site?"></textarea>
+          </div>
+          <p class="form-error" id="cf-error" hidden></p>
+          <button type="submit" class="form-submit">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div><!-- /page-contact -->
+
+</div><!-- /app -->
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">Ted<span>.</span>Baern</span>
+  <span class="footer-copy">© 2026 · Carnegie Mellon University · Engineered from scratch</span>
+  <ul class="footer-links">
+    <li><a href="https://linkedin.com/tedbaern" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+    <li><a href="https://github.com/t-baern" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+    <li><a href="mailto:theobaern@gmail.com">Email</a></li>
+  </ul>
+</footer>
+
+<script>
+/* ── CURSOR ── */
+const cursor = document.getElementById('cursor');
+let mx=0, my=0, cx=0, cy=0;
+window.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+(function animCursor() {
+  cx += (mx-cx)*0.18; cy += (my-cy)*0.18;
+  cursor.style.left = cx+'px'; cursor.style.top = cy+'px';
+  requestAnimationFrame(animCursor);
+})();
+document.addEventListener('mouseover', e => {
+  const t = e.target.closest('a, button, .work-card, [data-page], [data-scroll], .pricing-cta, .faq-question, .contact-method');
+  cursor.classList.toggle('hovering', !!t);
+});
+
+/* ── ROUTER ── */
+const pages = {
+  home:    document.getElementById('page-home'),
+  pricing: document.getElementById('page-pricing'),
+  faq:     document.getElementById('page-faq'),
+  about:   document.getElementById('page-about'),
+  contact: document.getElementById('page-contact'),
+};
+
+let currentPage = 'home';
+
+function navigateTo(pageKey) {
+  if (!pages[pageKey] || pageKey === currentPage) return;
+
+  // Hide current
+  const old = pages[currentPage];
+  old.classList.remove('visible');
+  setTimeout(() => old.classList.remove('active'), 400);
+
+  // Show new
+  currentPage = pageKey;
+  const next = pages[pageKey];
+  next.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  resetHeroParallax();
+  if (scrollProgress) scrollProgress.style.width = '0%';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      next.classList.add('visible');
+      setupReveal();
+      setupValueItems();
+      runTypewriters(next);
+    });
+  });
+
+  // Update nav active state
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.toggle('active', a.dataset.page === pageKey);
+  });
+}
+
+// Wire nav links
+document.querySelectorAll('[data-page]').forEach(el => {
+  el.addEventListener('click', () => navigateTo(el.dataset.page));
+});
+
+/* ── TYPEWRITER (spell-out headlines) ── */
+const twReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function runTypewriters(scope) {
+  const heads = scope.querySelectorAll('[data-typewriter]');
+  heads.forEach(h => {
+    // Cache the original markup once
+    if (!h.dataset.twHtml) h.dataset.twHtml = h.innerHTML;
+    const html = h.dataset.twHtml;
+    if (twReduce) { h.innerHTML = html; return; }
+
+    // Tokenize into chars and <br> tags
+    const tokens = [];
+    html.split(/(<br[^>]*>)/i).forEach(part => {
+      if (/^<br/i.test(part)) tokens.push('<br>');
+      else for (const ch of part) tokens.push(ch);
+    });
+
+    h.style.minHeight = h.offsetHeight + 'px';
+    let i = 0;
+    clearInterval(h._twTimer);
+    h.innerHTML = '';
+    const caret = document.createElement('span');
+    caret.className = 'tw-caret';
+    h.appendChild(caret);
+    h._twTimer = setInterval(() => {
+      if (i >= tokens.length) {
+        clearInterval(h._twTimer);
+        h.innerHTML = html;
+        return;
+      }
+      const tok = tokens[i++];
+      let node;
+      if (tok === '<br>') {
+        node = document.createElement('br');
+      } else {
+        node = document.createElement('span');
+        node.className = 'tw-char';
+        node.textContent = tok;
+      }
+      h.insertBefore(node, caret);
+    }, 24);
+  });
+}
+
+/* ── SCROLL ANIMATION (progress bar + hero parallax) ── */
+const scrollProgress = document.getElementById('scroll-progress');
+const heroHeadline = document.querySelector('.hero-headline');
+const heroTicker = document.querySelector('.hero-ticker');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let scrollTicking = false;
+
+function onScroll() {
+  const st = window.scrollY || document.documentElement.scrollTop || 0;
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  scrollProgress.style.width = (docH > 0 ? (st / docH) * 100 : 0) + '%';
+
+  if (!reduceMotion && currentPage === 'home' && heroHeadline) {
+    const p = Math.min(st / 600, 1);
+    heroHeadline.style.transform = 'translateY(' + (st * 0.22) + 'px)';
+    heroHeadline.style.opacity = 1 - p * 0.9;
+    if (heroTicker) heroTicker.style.transform = 'translateY(' + (st * 0.12) + 'px)';
+  }
+  scrollTicking = false;
+}
+window.addEventListener('scroll', () => {
+  if (!scrollTicking) { requestAnimationFrame(onScroll); scrollTicking = true; }
+}, { passive: true });
+
+function resetHeroParallax() {
+  if (heroHeadline) { heroHeadline.style.transform = ''; heroHeadline.style.opacity = ''; }
+  if (heroTicker) heroTicker.style.transform = '';
+}
+
+// Scroll to section on same page
+document.querySelectorAll('[data-scroll]').forEach(el => {
+  el.addEventListener('click', () => {
+    const target = document.getElementById(el.dataset.scroll);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+/* ── REVEAL ON SCROLL ── */
+function setupReveal() {
+  const reveals = document.querySelectorAll('.page.active .reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => obs.observe(el));
+}
+
+/* ── VALUE ITEMS (about page) ── */
+function setupValueItems() {
+  const items = document.querySelectorAll('.page.active .value-item');
+  if (!items.length) return;
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 90);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  items.forEach(el => obs.observe(el));
+}
+
+/* ── DRAG-TO-SCROLL ── */
+const track = document.getElementById('workTrack');
+if (track) {
+  let dragging=false, startX, scrollLeft;
+  track.addEventListener('mousedown', e => {
+    dragging=true; startX=e.pageX-track.offsetLeft;
+    scrollLeft=track.parentElement.scrollLeft;
+  });
+  document.addEventListener('mouseup', () => dragging=false);
+  track.addEventListener('mousemove', e => {
+    if(!dragging) return;
+    e.preventDefault();
+    track.parentElement.scrollLeft = scrollLeft - (e.pageX-track.offsetLeft-startX)*1.5;
+  });
+  track.addEventListener('touchstart', e => {
+    startX=e.touches[0].pageX; scrollLeft=track.parentElement.scrollLeft;
+  }, {passive:true});
+  track.addEventListener('touchmove', e => {
+    track.parentElement.scrollLeft = scrollLeft - (e.touches[0].pageX-startX)*1.5;
+  }, {passive:true});
+}
+
+/* ── FAQ ACCORDION ── */
+document.querySelectorAll('.faq-question').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.parentElement;
+    const answer = item.querySelector('.faq-answer');
+    const isOpen = item.classList.contains('open');
+
+    // Close all
+    document.querySelectorAll('.faq-item.open').forEach(i => {
+      i.classList.remove('open');
+      i.querySelector('.faq-answer').style.maxHeight = '0';
+    });
+
+    if (!isOpen) {
+      item.classList.add('open');
+      answer.style.maxHeight = answer.scrollHeight + 'px';
+    }
+  });
+});
+
+/* ── CONTACT FORM → GOOGLE FORMS ──────────────────────────────
+   Submissions are posted straight to a Google Form, which collects
+   them in a linked Google Sheet and (optionally) emails you.
+
+   SETUP — replace the 7 values below with your own:
+   1. Create a Google Form with these questions, in this order:
+        First Name · Last Name · Email · Business Name ·
+        What are you looking for? (multiple choice / short answer) ·
+        Tell me about your project
+   2. FORM_ID — open your form's live link:
+        https://docs.google.com/forms/d/e/XXXXXXXX/viewform
+        ...and copy the XXXXXXXX part into FORM_ID.
+   3. entry IDs — on the live form, right-click → "View page source"
+        (or use the form's "Get pre-filled link" feature) and find
+        each field's `entry.123456789` id. Paste them below.
+   Until FORM_ID is filled in, the form runs in demo mode (no send).
+─────────────────────────────────────────────────────────────── */
+const GOOGLE_FORM = {
+  FORM_ID: '1FAIpQLSdGWzKjC9kVajokIIOog8jsliK29IaNgwbtEJuSW5uMWQiNrg',
+  fields: {
+    firstName: 'entry.370119909',
+    lastName:  'entry.426376000',
+    email:     'entry.371941205',
+    business:  'entry.1296384583',
+    package:   'entry.1843955537',
+    project:   'entry.1700949743',
+  },
+};
+
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('.form-submit');
+  const errorEl = form.querySelector('#cf-error');
+
+  // Client-side validation (form is novalidate so we control messaging)
+  if (!form.checkValidity()) {
+    errorEl.textContent = 'Please fill in your name and a valid email.';
+    errorEl.hidden = false;
+    form.reportValidity();
+    return;
+  }
+  errorEl.hidden = true;
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  const data = new FormData();
+  for (const [key, entryId] of Object.entries(GOOGLE_FORM.fields)) {
+    data.append(entryId, (form.elements[key]?.value || '').trim());
+  }
+
+  const configured = GOOGLE_FORM.FORM_ID && !GOOGLE_FORM.FORM_ID.startsWith('PASTE');
+  const markSent = () => {
+    btn.textContent = 'Sent ✓';
+    btn.style.background = '#2a2a2a';
+    btn.style.color = 'var(--accent)';
+    form.reset();
+  };
+
+  if (!configured) {
+    // Demo mode — no Google Form wired up yet.
+    console.warn('[contact form] GOOGLE_FORM.FORM_ID is not set — running in demo mode, nothing was sent.');
+    markSent();
+    return;
+  }
+
+  try {
+    // Google Forms doesn't send CORS headers, so the response is opaque.
+    // The POST still records the submission; no-cors only resolves on success.
+    await fetch(
+      `https://docs.google.com/forms/d/e/${GOOGLE_FORM.FORM_ID}/formResponse`,
+      { method: 'POST', mode: 'no-cors', body: data }
+    );
+    markSent();
+  } catch (err) {
+    errorEl.textContent = "Something went wrong sending your message. Email me directly at theobaern@gmail.com.";
+    errorEl.hidden = false;
+    btn.disabled = false;
+    btn.textContent = 'Try Again';
+  }
+}
+
+/* ── MAGNETIC BUTTONS ── */
+document.querySelectorAll('.btn-primary, .nav-cta, .form-submit').forEach(btn => {
+  btn.addEventListener('mousemove', e => {
+    const r = btn.getBoundingClientRect();
+    const x = e.clientX - r.left - r.width/2;
+    const y = e.clientY - r.top - r.height/2;
+    btn.style.transform = `translate(${x*0.18}px,${y*0.18}px) translateY(-3px)`;
+  });
+  btn.addEventListener('mouseleave', () => btn.style.transform = '');
+});
+
+/* ── INIT ── */
+pages.home.classList.add('active');
+requestAnimationFrame(() => requestAnimationFrame(() => {
+  pages.home.classList.add('visible');
+  setupReveal();
+}));
+document.querySelector('[data-page="home"]').classList.add('active');
+</script>
+</body>
+</html>
