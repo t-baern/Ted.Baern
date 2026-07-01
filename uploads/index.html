@@ -15,7 +15,7 @@
   --accent: #e8ff47;
   --grey1:  #1a1a1a;
   --grey2:  #2a2a2a;
-  --grey3:  #666;
+  --grey3:  #8a8a8a;
   --radius: 4px;
   --ease:   cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -41,11 +41,11 @@ a { color: inherit; text-decoration: none; }
   background: var(--accent);
   border-radius: 50%;
   pointer-events: none;
-  transform: translate(-50%, -50%);
-  transition: width 0.25s var(--ease), height 0.25s var(--ease);
+  transform: translate(-50%, -50%) scale(1);
+  transition: transform 0.25s var(--ease);
   mix-blend-mode: difference;
 }
-#cursor.hovering { width: 48px; height: 48px; }
+#cursor.hovering { transform: translate(-50%, -50%) scale(4); }
 
 /* ── GRAIN OVERLAY ── */
 body::before {
@@ -219,7 +219,7 @@ body::before {
   animation: fadeUp 0.8s var(--ease) 0.2s forwards;
 }
 .hero-headline {
-  font-size: clamp(3rem, 8vw, 7rem);
+  font-size: clamp(3rem, 8vw, 6rem);
   font-weight: 900; line-height: 0.95;
   letter-spacing: -0.03em;
   max-width: 14ch; margin-bottom: 40px;
@@ -302,7 +302,7 @@ body::before {
   background: var(--grey2); position: relative; overflow: hidden;
 }
 .scroll-hint-line::after {
-  content: ''; position: absolute; top: 0; left: -100%;
+  content: ''; position: absolute; top: 0; left: 0;
   width: 100%; height: 100%;
   background: var(--accent);
   animation: lineMove 2s var(--ease) infinite;
@@ -624,7 +624,9 @@ body::before {
   border-radius: var(--radius);
   border: 1px solid var(--grey2);
   color: var(--grey3);
-  transition: all 0.2s var(--ease);
+  transition: border-color 0.2s var(--ease), color 0.2s var(--ease),
+              background 0.2s var(--ease), transform 0.2s var(--ease),
+              box-shadow 0.2s var(--ease);
   cursor: pointer;
 }
 .pricing-cta:hover { border-color: var(--white); color: var(--white); }
@@ -753,11 +755,6 @@ body::before {
   padding: 28px 32px;
   position: relative; z-index: 1;
   display: flex; flex-direction: column; gap: 6px;
-  position: relative;
-}
-.cmu-badge-inner::before {
-  content: ''; position: absolute; top: 0; left: 0;
-  width: 3px; height: 100%; background: var(--accent);
 }
 .cmu-label {
   font-size: 0.68rem; font-weight: 600;
@@ -928,9 +925,9 @@ body > footer {
   to   { transform: translateX(-50%); }
 }
 @keyframes lineMove {
-  0%   { left: -100%; }
-  50%  { left: 0; }
-  100% { left: 100%; }
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(0); }
+  100% { transform: translateX(100%); }
 }
 
 /* ── RESPONSIVE ── */
@@ -1082,7 +1079,7 @@ body > footer {
 .m-cmu { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid #2a2a2a; margin-bottom: 38px; }
 .m-cmu .photo { position: absolute; inset: 0; background-image: url('cmu-gates.jpg'); background-size: cover; background-position: center 38%; }
 .m-cmu .veil { position: absolute; inset: 0; background: linear-gradient(to right, #141414 18%, rgba(20,20,20,0.78) 62%, rgba(20,20,20,0.55) 100%); }
-.m-cmu .inner { position: relative; padding: 26px 26px 26px 28px; border-left: 3px solid #e8ff47; }
+.m-cmu .inner { position: relative; padding: 26px; }
 .m-cmu .k { display: block; font: 600 9px/1.3 'Inter'; letter-spacing: 0.15em; text-transform: uppercase; color: #9a9a9a; margin-bottom: 6px; }
 .m-cmu .name { display: block; font: 800 18px/1.2 'Inter'; margin-bottom: 4px; }
 .m-cmu .dept { display: block; font: 400 12px/1.4 'Inter'; color: #9a9a9a; margin-bottom: 14px; }
@@ -1161,6 +1158,11 @@ body > footer {
 .m-cta-pill { display: flex; align-items: center; justify-content: space-between; width: 100%; background: #e8ff47; color: #0a0a0a; padding: 18px 24px; font: 800 14px/1 'Inter'; letter-spacing: 0.02em; border: none; border-radius: 100px; cursor: pointer; box-shadow: 0 10px 30px rgba(232,255,71,0.25); }
 .m-cta-pill .arr { font-size: 18px; }
 
+/* tap press feedback — touch has no hover to lean on */
+.m-cta-pill, .m-submit, .m-price .cta, .m-service, .m-method, .m-back, .m-menu a { transition: transform 0.14s var(--ease); }
+.m-cta-pill:active, .m-submit:active, .m-price .cta:active, .m-back:active { transform: scale(0.97); }
+.m-service:active, .m-method:active, .m-menu a:active { transform: scale(0.985); }
+
 /* hide global chrome while contact view is open */
 #mobile-site.on-contact .m-topbar,
 #mobile-site.on-contact .m-cta-bar { display: none; }
@@ -1237,7 +1239,6 @@ body > footer {
   </section>
 
   <section id="approach-section">
-    <p class="section-label reveal">The Approach</p>
     <h2 class="section-title reveal">Built different.<br>By design.</h2>
     <div class="scroll-hint">
       <div class="scroll-hint-line"></div>
@@ -1254,7 +1255,6 @@ body > footer {
 <span class="k">function</span> ship(site) {
   <span class="k">return</span> optimize(site);
 }</pre></div>
-          <span class="card-index">01</span>
           <div class="work-card-overlay">
             <p class="work-card-tag">Code Quality</p>
             <h3 class="work-card-name">Engineered from scratch.</h3>
@@ -1270,7 +1270,6 @@ body > footer {
               <div class="metric"><i style="width:99%"></i></div>
             </div>
           </div>
-          <span class="card-index">02</span>
           <div class="work-card-overlay">
             <p class="work-card-tag">Performance</p>
             <h3 class="work-card-name">Obsessed with speed.</h3>
@@ -1310,7 +1309,6 @@ body > footer {
               <circle class="dot" cx="365" cy="460" r="4"/>
             </svg>
           </div>
-          <span class="card-index">03</span>
           <div class="work-card-overlay">
             <p class="work-card-tag">AI-Powered</p>
             <h3 class="work-card-name">The frontier, applied.</h3>
@@ -1322,7 +1320,6 @@ body > footer {
             <span class="pin-shadow"></span>
             <span class="pin"></span>
           </div>
-          <span class="card-index">04</span>
           <div class="work-card-overlay">
             <p class="work-card-tag">Local SEO</p>
             <h3 class="work-card-name">Built to get found.</h3>
@@ -1339,7 +1336,6 @@ body > footer {
               <span class="node"></span>
             </div>
           </div>
-          <span class="card-index">05</span>
           <div class="work-card-overlay">
             <p class="work-card-tag">Direct Access</p>
             <h3 class="work-card-name">You talk to the builder.</h3>
@@ -1351,11 +1347,9 @@ body > footer {
   </section>
 
   <section id="home-services">
-    <p class="section-label reveal">What I Do</p>
     <h2 class="section-title reveal">Every service.<br>Engineered to perform.</h2>
     <div class="services-grid reveal">
       <div class="service-card">
-        <div class="service-number">01</div>
         <h3 class="service-name">Website Design & Build</h3>
         <p class="service-desc">A fully custom, purpose-built site designed around your brand, your customers, and your goals. No templates. No bloat. Just something that works.</p>
         <div class="service-tags">
@@ -1365,7 +1359,6 @@ body > footer {
         </div>
       </div>
       <div class="service-card">
-        <div class="service-number">02</div>
         <h3 class="service-name">Local SEO</h3>
         <p class="service-desc">Your site optimized to rank in your city. Structured data, Google Business integration, location pages, and site speed all handled for you.</p>
         <div class="service-tags">
@@ -1375,7 +1368,6 @@ body > footer {
         </div>
       </div>
       <div class="service-card">
-        <div class="service-number">03</div>
         <h3 class="service-name">Booking & E-commerce</h3>
         <p class="service-desc">Appointment systems, online stores, and payment flows built right into your site — so you make money while you sleep.</p>
         <div class="service-tags">
@@ -1385,7 +1377,6 @@ body > footer {
         </div>
       </div>
       <div class="service-card">
-        <div class="service-number">04</div>
         <h3 class="service-name">Maintenance & Growth</h3>
         <p class="service-desc">Monthly retainers for businesses that want ongoing updates, analytics reviews, landing page tests, and a developer always on call.</p>
         <div class="service-tags">
@@ -1416,7 +1407,6 @@ body > footer {
 ═══════════════════════════════════════ -->
 <div class="page" id="page-pricing">
   <div class="pricing-header">
-    <p class="section-label">Pricing</p>
     <h1 class="section-title" data-typewriter style="margin-bottom:16px;">Transparent pricing.<br>No surprises.</h1>
     <p style="color:var(--grey3);font-size:0.95rem;max-width:48ch;line-height:1.7;">Every project is scoped to what you actually need. These packages cover the most common starting points.
 Not sure which fits? Let's talk.</p>
@@ -1534,7 +1524,6 @@ Not sure which fits? Let's talk.</p>
 ═══════════════════════════════════════ -->
 <div class="page" id="page-faq">
   <div class="faq-header">
-    <p class="section-label">FAQ</p>
     <h1 class="section-title" data-typewriter style="margin-bottom:16px;">Questions,<br>answered honestly.</h1>
     <p style="color:var(--grey3);font-size:0.95rem;line-height:1.7;">Can't find what you're looking for? <span style="color:var(--accent);cursor:pointer;" data-page="contact">Just ask me directly.</span></p>
   </div>
@@ -1640,7 +1629,6 @@ Not sure which fits? Let's talk.</p>
 <div class="page" id="page-about">
   <div class="about-grid">
     <div class="about-left">
-      <p class="about-eyebrow">About Ted</p>
       <h1 class="about-headline" data-typewriter>Trained at the top.<br>Working for you.</h1>
       <p class="about-body">I'm <strong>Ted Baern</strong>, a Computer Science student at Carnegie Mellon University — consistently ranked <strong>#1 in the world</strong> for both Computer Science and Artificial Intelligence.</p>
       <p class="about-body">I started building websites because I kept seeing the same thing: small businesses with real value to offer, stuck with generic templates or overpriced agencies that didn't understand what they actually needed. I can do better, and I can do it for a fraction of what agencies charge.</p>
@@ -1703,7 +1691,6 @@ Not sure which fits? Let's talk.</p>
 <div class="page" id="page-contact">
   <div class="contact-bg-text">HELLO</div>
   <div class="contact-inner">
-    <p class="section-label">Get in Touch</p>
     <div class="contact-grid">
       <div class="contact-left">
         <h1 class="contact-headline" data-typewriter>Let's build<br>something<br>great.</h1>
@@ -1839,12 +1826,12 @@ Not sure which fits? Let's talk.</p>
 
         <div>
           <div class="m-approach">
-            <div class="idx">/ 01 — Code Quality</div>
+            <div class="idx">Code Quality</div>
             <h2>Engineered<br>from scratch.</h2>
             <p>No WordPress. No Wix. No drag-and-drop. Every line of HTML, CSS and JavaScript written by hand — the way computer science teaches you to build things that actually work.</p>
           </div>
           <div class="m-approach has-gauge">
-            <div class="idx">/ 02 — Performance</div>
+            <div class="idx">Performance</div>
             <h2>Obsessed<br>with speed.</h2>
             <p>A one-second delay in load time reduces conversions by 7%. I target 99/100 Lighthouse on every build because good "enough" doesn't exist for your business.</p>
             <div class="m-gauge-row">
@@ -1857,17 +1844,17 @@ Not sure which fits? Let's talk.</p>
             </div>
           </div>
           <div class="m-approach">
-            <div class="idx">/ 03 — AI-Powered</div>
+            <div class="idx">AI-Powered</div>
             <h2>The frontier,<br>applied.</h2>
             <p>Studying at the #1 AI school in the world means I don't just use AI tools — I understand how they work. That translates into smarter copy, better SEO and faster builds for you.</p>
           </div>
           <div class="m-approach">
-            <div class="idx">/ 04 — Local SEO</div>
+            <div class="idx">Local SEO</div>
             <h2>Built to<br>get found.</h2>
             <p>Structured data, Google Business integration, fast-loading pages and location-specific copy — the technical foundations that get small businesses ranking in their neighborhoods.</p>
           </div>
           <div class="m-approach">
-            <div class="idx">/ 05 — Direct Access</div>
+            <div class="idx">Direct Access</div>
             <h2>You talk to<br>the builder.</h2>
             <p>No account managers. No handoffs. No agency markups. You get my direct line, my full attention, and a site that reflects exactly what we discussed.</p>
           </div>
@@ -1876,10 +1863,10 @@ Not sure which fits? Let's talk.</p>
         <div class="m-services">
           <p class="label">What I Do</p>
           <div>
-            <div class="m-service" data-mnav="pricing"><span class="n">01</span><span class="t">Website Design &amp; Build</span></div>
-            <div class="m-service" data-mnav="pricing"><span class="n">02</span><span class="t">Local SEO</span></div>
-            <div class="m-service" data-mnav="pricing"><span class="n">03</span><span class="t">Booking &amp; E-commerce</span></div>
-            <div class="m-service" data-mnav="pricing"><span class="n">04</span><span class="t">Maintenance &amp; Growth</span></div>
+            <div class="m-service" data-mnav="pricing"><span class="t">Website Design &amp; Build</span></div>
+            <div class="m-service" data-mnav="pricing"><span class="t">Local SEO</span></div>
+            <div class="m-service" data-mnav="pricing"><span class="t">Booking &amp; E-commerce</span></div>
+            <div class="m-service" data-mnav="pricing"><span class="t">Maintenance &amp; Growth</span></div>
           </div>
         </div>
 
@@ -1892,7 +1879,6 @@ Not sure which fits? Let's talk.</p>
       <!-- ═══ ABOUT ═══ -->
       <section class="m-page m-about" id="m-about">
         <div class="m-section">
-          <p class="m-eyebrow">About Ted</p>
           <h1 class="m-h1">Trained at<br>the top.<br>Working<br>for you.</h1>
           <p class="body">I'm <span class="hl">Ted Baern</span>, a Computer Science student at Carnegie Mellon University — consistently ranked <span class="hl">#1 in the world</span> for both Computer Science and Artificial Intelligence.</p>
           <p class="body">I started building websites because I kept seeing the same thing: small businesses with real value to offer, stuck with generic templates or overpriced agencies that didn't understand what they actually needed.</p>
@@ -1925,7 +1911,6 @@ Not sure which fits? Let's talk.</p>
       <!-- ═══ PRICING ═══ -->
       <section class="m-page" id="m-pricing">
         <div class="m-section">
-          <p class="m-eyebrow">Pricing</p>
           <h1 class="m-h1">Transparent<br>pricing. No<br>surprises.</h1>
           <p class="m-lead">Every project is scoped to what you actually need. These packages cover the most common starting points.</p>
 
@@ -1992,7 +1977,6 @@ Not sure which fits? Let's talk.</p>
       <!-- ═══ FAQ ═══ -->
       <section class="m-page" id="m-faq">
         <div class="m-section">
-          <p class="m-eyebrow">FAQ</p>
           <h1 class="m-h1">Questions,<br>answered<br>honestly.</h1>
           <p class="m-lead">Can't find what you're looking for? <span class="m-link" data-mnav="contact">Just ask me directly.</span></p>
           <div id="m-faq-list">
@@ -2016,7 +2000,6 @@ Not sure which fits? Let's talk.</p>
           <span class="lbl">Reach out</span>
         </div>
         <div class="m-contact-inner">
-          <p class="eyebrow2">Get in Touch</p>
           <h1>Let's build<br>something<br>great.</h1>
           <p class="sub">Tell me about your business and what you're trying to accomplish. First conversation is always free — no pitch, just a real talk.</p>
 
